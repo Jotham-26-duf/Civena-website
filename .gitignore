@@ -1,0 +1,18 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+.env
+.env.*
+!.env.example
+coverage/
+*.tsbuildinfo
+supabase/.temp/
+supabase/.branches/
+
+# NPM cache and logs
+.npm-cache/
+npm-cache/
+*.log
+npm-debug.log*
