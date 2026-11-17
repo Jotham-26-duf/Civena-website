@@ -1,7 +1,6 @@
 import { movies as localMovies, type Movie } from '@/data/movies';
 import { series as localSeries, validateSeriesCatalogue, type SeriesEntry } from '@/data/series';
 import { connection } from 'next/server';
-import { lookup } from 'node:dns/promises';
 import { getSupabaseEnvironment } from '@/lib/supabase/environment';
 
 export type Catalogue = { movies: Movie[]; series: SeriesEntry[] };
@@ -95,17 +94,6 @@ function requestDiagnostics(error: unknown) {
     tlsEstablished: status !== null ? true : tlsFailure ? false : null,
     proxyConfigured: Boolean(process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.ALL_PROXY),
   };
-}
-
-async function hostnameResolution(baseUrl: string): Promise<{ resolved: boolean | null; errorCode?: string }> {
-  try {
-    await lookup(new URL(baseUrl).hostname);
-    return { resolved: true };
-  } catch (error) {
-    const code = error && typeof error === 'object' && 'code' in error && typeof error.code === 'string'
-      ? error.code : undefined;
-    return { resolved: false, ...(code ? { errorCode: code } : {}) };
-  }
 }
 
 function publicAssetUrl(baseUrl: string, value: unknown): string | null {
@@ -255,8 +243,14 @@ export async function getCatalogue(): Promise<Catalogue> {
     };
   } catch (error) {
     const diagnostic = requestDiagnostics(error);
-    const dns = await hostnameResolution(baseUrl);
-    console.error('Failed to retrieve the public CINEVA catalogue.', { ...diagnostic, hostnameResolved: dns.resolved, dnsErrorCode: dns.errorCode ?? null });
+    const dnsErrorCodes = ['EAI_AGAIN', 'EAI_FAIL', 'ENODATA', 'ENOTFOUND', 'ESERVFAIL'];
+    const dnsErrorCode = [diagnostic.errorCode, diagnostic.causeCode]
+      .find((code) => code && dnsErrorCodes.includes(code)) ?? null;
+    console.error('Failed to retrieve the public CINEVA catalogue.', {
+      ...diagnostic,
+      hostnameResolved: dnsErrorCode ? false : diagnostic.httpResponseReceived ? true : null,
+      dnsErrorCode,
+    });
     if (process.env.NODE_ENV === 'development') return { movies: localMovies, series: localSeries };
     throw new Error('The catalogue could not be loaded. Please try again later.');
   }

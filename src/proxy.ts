@@ -11,10 +11,11 @@ export async function proxy(request: NextRequest) {
   const supabase = createServerClient<Database>(environment.url, environment.publishableKey, {
     cookies: {
       getAll: () => request.cookies.getAll(),
-      setAll(cookiesToSet) {
+      setAll(cookiesToSet, headers) {
         for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
         response = NextResponse.next({ request });
         for (const { name, value, options } of cookiesToSet) response.cookies.set(name, value, options);
+        for (const [name, value] of Object.entries(headers)) response.headers.set(name, value);
       },
     },
   });

@@ -5,8 +5,10 @@
   "description": "CINEVA Films Streaming",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -22,10 +24,12 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.17",
     "@types/node": "^24.19.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "supabase": "^3.1.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.164.0"
   }
 }
